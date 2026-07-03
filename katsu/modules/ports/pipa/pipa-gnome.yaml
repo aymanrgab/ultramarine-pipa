@@ -2,10 +2,6 @@ builder: dnf
 distro: Ultramarine GNOME 44 (Xiaomi Pad 6)
 
 import:
-  - ../../base/base.yaml
-  - ../../base/base-disk.yaml
-  - ../../base/desktop.yaml
-  - ../../gnome/gnome.yaml
   - pipa.yaml
 
 out_file: ultramarine-gnome-44-pipa.raw
@@ -36,10 +32,84 @@ dnf:
   releasever: 44
   exec: dnf5
   arch: aarch64
+  options:
+    - --setopt=cachedir=/var/cache/dnf
+    - --nogpgcheck
+    - --setopt=keepcache=True
+    - --best
+    - --allowerasing
   packages:
+    # Base system
+    - filesystem
+    - setup
+    - glibc
+    - glibc-common
+    - dnf
+    - dnf5
+    - rpm
+    - systemd
+    - dracut
+    - dracut-config-generic
+    - NetworkManager
+    - "@core"
+    - fedora-repos
+    - efibootmgr
+    - sudo
+    - passwd
+    - util-linux
+    - coreutils
+    - bash
+    - less
+    - vim-minimal
+
+    # Ultramarine release
+    - ultramarine-release
+    - ultramarine-release-common
+    - ultramarine-release-gnome
     - ultramarine-release-identity-gnome
-    - snapshot
+    - ultramarine-repos
+
+    # RPM Fusion
+    - rpmfusion-free-release
+    - rpmfusion-nonfree-release
+
+    # aarch64 boot
+    - grub2-efi-aa64
+    - grub2-efi-aa64-modules
+    - shim-aa64
+    - grub2-tools
+
+    # GNOME desktop
+    - "@workstation-product-environment"
+    - gnome-shell
+    - gnome-session
+    - gnome-settings-daemon
+    - gnome-control-center
+    - gnome-terminal
     - gnome-text-editor
+    - nautilus
+    - gdm
+    - xdg-desktop-portal-gnome
+    - xdg-user-dirs
+    - xdg-user-dirs-gtk
+    - snapshot
+
+    # Hardware support
+    - "@hardware-support"
+    - linux-firmware
+    - pipewire
+    - pipewire-pulseaudio
+    - wireplumber
+    - alsa-utils
+
+  exclude:
+    - fedora-release*
+    - generic-release*
+    - kernel
+    - kernel-core
+    - kernel-debug*
+    - kernel-devel*
+    - kernel-modules*
 
 disk:
   size: 8GiB
