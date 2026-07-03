@@ -1,0 +1,53 @@
+version: 2.1
+
+parameters:
+  pipa_pkgs_branch:
+    type: string
+    default: "main"
+
+jobs:
+  build_image:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: arm.large
+    working_directory: ~/project
+    steps:
+      - checkout
+      - run:
+          name: Show runner details
+          command: |
+            uname -a
+            docker version
+      - run:
+          name: Build Fedora builder image
+          no_output_timeout: 30m
+          command: docker build -t ultramarine-pipa-builder .
+      - run:
+          name: Build Ultramarine pipa image
+          no_output_timeout: 120m
+          command: |
+            mkdir -p output
+            docker run --rm --privileged \
+              -v "$PWD/output:/build/output" \
+              -v /dev:/dev \
+              -e "BUILD_GIT_REV=${CIRCLE_SHA1}" \
+              -e "PIPA_PKGS_BRANCH=<< pipeline.parameters.pipa_pkgs_branch >>" \
+              ultramarine-pipa-builder
+      - run:
+          name: Summarize build artifacts
+          command: |
+            echo "Generated images:"
+            ls -lh output/ 2>/dev/null || true
+            for zip in output/*.zip; do
+              [ -f "$zip" ] || continue
+              echo
+              echo "=== $zip ==="
+              unzip -l "$zip" | tail -n +4 | head -n -2
+            done
+      - store_artifacts:
+          path: output
+
+workflows:
+  build:
+    jobs:
+      - build_image

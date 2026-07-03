@@ -1,0 +1,8 @@
+.git
+output/
+repo/
+sources/
+*.raw
+*.zip
+*.iso
+*.rpm

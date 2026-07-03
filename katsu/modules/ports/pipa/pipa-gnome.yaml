@@ -1,0 +1,64 @@
+builder: dnf
+distro: Ultramarine GNOME 44 (Xiaomi Pad 6)
+
+import:
+  - ../../base/base.yaml
+  - ../../base/base-disk.yaml
+  - ../../base/desktop.yaml
+  - ../../gnome/gnome.yaml
+  - pipa.yaml
+
+out_file: ultramarine-gnome-44-pipa.raw
+
+bootloader: grub
+
+kernel_cmdline: "quiet clk_ignore_unused pd_ignore_unused"
+
+scripts:
+  post:
+    - id: grub
+      name: Set up GRUB for pipa
+      file: pipa-grub-setup.sh
+    - id: pipa-services
+      priority: 50
+      name: Enable pipa services
+      file: pipa-services.sh
+    - id: pipa-user
+      priority: 55
+      name: Create default user
+      file: pipa-user-setup.sh
+    - id: default-target
+      priority: 60
+      name: Set default target to graphical
+      file: pipa-default-target.sh
+
+dnf:
+  releasever: 44
+  exec: dnf5
+  arch: aarch64
+  packages:
+    - ultramarine-release-identity-gnome
+    - snapshot
+    - gnome-text-editor
+
+disk:
+  size: 8GiB
+  partitions:
+    - label: EFI
+      type: esp
+      size: 512MiB
+      filesystem: efi
+      mountpoint: /boot/efi
+
+    - label: boot
+      type: xbootldr
+      size: 1GiB
+      filesystem: ext4
+      mountpoint: /boot
+
+    - label: root
+      flags:
+        - grow-fs
+      type: root
+      filesystem: ext4
+      mountpoint: /

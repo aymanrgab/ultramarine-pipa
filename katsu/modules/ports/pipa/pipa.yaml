@@ -1,0 +1,55 @@
+builder: dnf
+
+dnf:
+  releasever: 44
+  exec: dnf5
+  repodir: repodir/
+  options:
+    - --nogpgcheck
+  packages:
+    # Pipa kernel and firmware
+    - kernel-pipa
+    - kernel-pipa-modules
+    - kernel-pipa-headers
+    - xiaomi-pipa-firmware
+
+    # Boot and system
+    - pipa-dracut
+    - pipa-grub-config
+    - pipa-metapkg
+    - swclock-offset
+    - bootmac
+
+    # Audio and camera
+    - pipa-sound-conf
+    - libcamera
+    - libcamera-ipa
+    - libcamera-tools
+    - gstreamer1-plugin-libcamera
+    - pipewire-plugin-libcamera
+    - alsa-ucm-conf-sm8250
+
+    # Sensors
+    - pipa-sensors
+    - hexagonrpc
+    - libssc
+    - iio-sensor-proxy
+
+    # Qualcomm firmware services
+    - qrtr
+    - tqftpserv
+    - pd-mapper
+
+    # GPU, display, wireless
+    - mesa-dri-drivers
+    - wireless-regdb
+
+    # Power management
+    - tuned
+    - tuned-ppd
+
+  exclude:
+    - kernel
+    - kernel-core
+    - kernel-devel*
+    - kernel-modules*
