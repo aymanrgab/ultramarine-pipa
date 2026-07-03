@@ -9,8 +9,9 @@ RUN dnf install -y \
     android-tools \
     && dnf clean all
 
-RUN dnf install -y 'dnf-command(copr)' && \
-    dnf copr enable -y terrapkg/terra && \
+RUN dnf install -y --nogpgcheck \
+    --repofrompath 'terra,https://repos.fyralabs.com/terra44' \
+    terra-release terra-gpg-keys && \
     dnf install -y katsu && \
     dnf clean all
 
