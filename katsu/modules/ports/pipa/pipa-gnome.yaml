@@ -36,8 +36,8 @@ dnf:
     - --setopt=cachedir=/var/cache/dnf
     - --nogpgcheck
     - --setopt=keepcache=True
-    - --best
     - --allowerasing
+    - --skip-unavailable
   packages:
     # Base system
     - filesystem
@@ -68,6 +68,7 @@ dnf:
     - ultramarine-release-gnome
     - ultramarine-release-identity-gnome
     - ultramarine-repos
+    - terra-release
 
     # RPM Fusion
     - rpmfusion-free-release
@@ -80,7 +81,6 @@ dnf:
     - grub2-tools
 
     # GNOME desktop
-    - "@workstation-product-environment"
     - gnome-shell
     - gnome-session
     - gnome-settings-daemon
@@ -92,10 +92,19 @@ dnf:
     - xdg-desktop-portal-gnome
     - xdg-user-dirs
     - xdg-user-dirs-gtk
+    - gnome-software
+    - gnome-disk-utility
+    - gnome-system-monitor
+    - gnome-tweaks
+    - gnome-calculator
+    - gnome-clocks
+    - gnome-weather
+    - evince
+    - file-roller
+    - loupe
     - snapshot
 
     # Hardware support
-    - "@hardware-support"
     - linux-firmware
     - pipewire
     - pipewire-pulseaudio
@@ -103,7 +112,6 @@ dnf:
     - alsa-utils
 
   exclude:
-    - fedora-release*
     - generic-release*
     - kernel
     - kernel-core

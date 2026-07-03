@@ -6,11 +6,11 @@ dnf:
   repodir: repodir/
   options:
     - --nogpgcheck
+    - --skip-unavailable
   packages:
     # Pipa kernel and firmware
     - kernel-pipa
     - kernel-pipa-modules
-    - kernel-pipa-headers
     - xiaomi-pipa-firmware
 
     # Boot and system
@@ -26,8 +26,6 @@ dnf:
     - libcamera-ipa
     - libcamera-tools
     - gstreamer1-plugin-libcamera
-    - pipewire-plugin-libcamera
-    - alsa-ucm-conf-sm8250
 
     # Sensors
     - pipa-sensors
