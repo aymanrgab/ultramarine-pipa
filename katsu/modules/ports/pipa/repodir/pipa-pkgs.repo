@@ -1,0 +1,5 @@
+[pipa-pkgs]
+name=Pipa Packages for Xiaomi Pad 6
+baseurl=https://thespider2.github.io/pipa-pkgs/repo/ultramarine/
+enabled=1
+gpgcheck=0

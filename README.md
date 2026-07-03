@@ -1,9 +1,9 @@
 # Ultramarine OS for Xiaomi Pad 6 (pipa)
 
 Ultramarine Linux (Fedora-based) port for the Xiaomi Pad 6, built with the
-[Katsu](https://github.com/FyraLabs/katsu) image builder. Carries over all
-hardware support from the [pipa-pkgs](https://github.com/aymanrgab/pipa-pkgs)
-Arch Linux packages.
+[Katsu](https://github.com/FyraLabs/katsu) image builder. Packages are
+hosted on [pipa-pkgs](https://github.com/thespider2/pipa-pkgs) and pulled
+from the remote DNF repo at build time.
 
 ## What works
 
@@ -21,59 +21,47 @@ Arch Linux packages.
 
 ```
 ultramarine-pipa/
-├── specs/              # RPM .spec files for all pipa packages
-├── sources/            # Patches, configs (populated by link-sources.sh)
 ├── katsu/              # Katsu image manifests
 │   └── modules/ports/pipa/
 │       ├── pipa.yaml           # Port module (packages + excludes)
 │       ├── pipa-gnome.yaml     # Top-level GNOME disk image manifest
 │       ├── pipa-grub-setup.sh  # GRUB configuration script
 │       ├── pipa-services.sh    # Service enablement script
-│       └── repodir/            # Local repo definition
-├── scripts/            # Build, link, and flash helper scripts
+│       └── repodir/            # DNF repo pointing to pipa-pkgs
+├── scripts/            # Build and flash helper scripts
 ├── assets/             # EFI template, vbmeta-disabled.img
-├── repo/               # Built RPMs (local repo, git-ignored)
+├── Dockerfile          # Fedora 44 build container (Katsu only)
 └── output/             # Final flash images (git-ignored)
 ```
 
-## Building
+## Package repo
 
-### Prerequisites
+All RPM packages are built and published via
+[pipa-pkgs](https://github.com/thespider2/pipa-pkgs) to GitHub Pages:
 
-- Fedora 44 (aarch64) or cross-build with `mock --arch=aarch64`
-- `katsu` installed from [Terra](https://github.com/terrapkg/packages)
-- `rpm-build`, `rpmdevtools`, `createrepo_c`, `mock`
-- `/home/ayman/pipa-pkgs` with all patches and source files
-
-### Quick build
-
-```bash
-# 1. Set up build environment
-./scripts/setup-build-env.sh
-
-# 2. Full pipeline: link sources -> build RPMs -> Katsu image -> flash images
-./scripts/build-all.sh
+```
+https://thespider2.github.io/pipa-pkgs/repo/ultramarine/
 ```
 
-### Step by step
+This repo only handles image building — it pulls pre-built packages
+from the remote DNF repo above.
+
+## Building
+
+### Docker (recommended)
 
 ```bash
-# Link source files from pipa-pkgs
-./scripts/link-sources.sh
+docker build -t ultramarine-pipa .
+docker run --privileged --rm \
+  -v "$PWD/output:/build/output" \
+  ultramarine-pipa
+```
 
-# Build individual RPMs
-./scripts/build-rpm.sh specs/kernel-pipa.spec
-./scripts/build-rpm.sh specs/xiaomi-pipa-firmware.spec
-# ... etc
+### Local build
 
-# Refresh local repo
-./scripts/refresh-repo.sh
-
-# Build Katsu image
-katsu -o disk-image katsu/modules/ports/pipa/pipa-gnome.yaml
-
-# Post-process into flash images
-sudo ./scripts/post-process-image.sh ultramarine-gnome-44-pipa.raw
+```bash
+# Requires Fedora 44 (aarch64) with katsu installed
+./scripts/build-all.sh
 ```
 
 ## Flashing
@@ -99,27 +87,17 @@ cd output/ultramarine-pipa-gnome-*/
 | `ultramarine_boot.raw` | `cust` | /boot (kernel, initramfs, DTB, GRUB) |
 | `ultramarine_rootfs.raw` | `userdata` | Root filesystem |
 
-## Packages
+## OTA Updates
 
-| RPM Package | Source | Description |
-|---|---|---|
-| `kernel-pipa` | Custom 7.0.x kernel | 18 patches for camera, audio, sensors |
-| `xiaomi-pipa-firmware` | Binary blobs | Speaker, DSP, touch, SoC firmware |
-| `pipa-sound-conf` | WirePlumber config | Audio + camera PipeWire settings |
-| `pipa-sensors` | Systemd units + udev | Sensor Core (SDSP) configuration |
-| `pipa-dracut` | Dracut module | Initramfs firmware loading |
-| `pipa-grub-config` | GRUB helper | Kernel-install plugin for GRUB |
-| `hexagonrpc` | FastRPC daemon | DSP communication service |
-| `libssc` | Patched upstream | Qualcomm Sensor Core library |
-| `iio-sensor-proxy` | Patched upstream | D-Bus sensor proxy with SSC |
-| `libcamera` | Patched upstream | Camera support with OV13B10/HI846 |
-| `bootmac` | postmarketOS | MAC address configuration |
-| `swclock-offset` | postmarketOS | Software clock for non-writable RTC |
-| `pipa-metapkg` | Meta package | Pulls all pipa components |
+On a running tablet, packages update directly from pipa-pkgs:
+
+```bash
+sudo dnf upgrade --refresh
+```
 
 ## Credits
 
 - Kernel and device tree work based on upstream Linux and Qualcomm SM8250 support
 - Mu-Silicium UEFI firmware from [onesaladleaf/Mu-Silicium](https://github.com/onesaladleaf/Mu-Silicium)
 - Image build system by [FyraLabs/Katsu](https://github.com/FyraLabs/katsu)
-- Arch Linux packaging from [pipa-pkgs](https://github.com/aymanrgab/pipa-pkgs)
+- Arch Linux packaging from [pipa-pkgs](https://github.com/thespider2/pipa-pkgs)

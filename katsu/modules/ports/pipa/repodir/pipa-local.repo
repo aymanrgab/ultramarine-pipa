@@ -1,5 +1,0 @@
-[pipa-local]
-name=Pipa Local Packages
-baseurl=file:///work/repo/
-enabled=1
-gpgcheck=0
