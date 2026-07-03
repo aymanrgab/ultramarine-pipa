@@ -7,6 +7,7 @@ dnf:
   options:
     - --nogpgcheck
     - --skip-unavailable
+    - --skip-broken
   packages:
     # Pipa kernel and firmware
     - kernel-pipa

@@ -38,6 +38,7 @@ dnf:
     - --setopt=keepcache=True
     - --allowerasing
     - --skip-unavailable
+    - --skip-broken
   packages:
     # Base system
     - filesystem
