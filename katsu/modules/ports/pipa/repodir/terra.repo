@@ -1,0 +1,10 @@
+[terra]
+name=Terra Packages $releasever
+baseurl=https://repos.fyralabs.com/terra$releasever
+metadata_expire=6h
+type=rpm
+skip_if_unavailable=True
+gpgcheck=0
+repo_gpgcheck=0
+enabled=1
+enabled_metadata=1
