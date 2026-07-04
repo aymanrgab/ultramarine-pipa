@@ -32,15 +32,15 @@ fi
         esac
 
         printf 'menuentry "Ultramarine Linux (Xiaomi Pad 6) - %s" {\n' "$title"
-        printf '    devicetree ($boot)/%s\n' "$dtb_rel"
         printf '    linux ($boot)/%s %s\n' "$kernel_rel" "$cmdline"
         printf '    initrd ($boot)/%s\n' "$initramfs_rel"
+        printf '    devicetree ($boot)/%s\n' "$dtb_rel"
         printf '}\n\n'
 
         printf 'menuentry "Ultramarine Linux (recovery) - %s" {\n' "$title"
-        printf '    devicetree ($boot)/%s\n' "$dtb_rel"
         printf '    linux ($boot)/%s %s systemd.unit=multi-user.target\n' "$kernel_rel" "$cmdline"
         printf '    initrd ($boot)/%s\n' "$initramfs_rel"
+        printf '    devicetree ($boot)/%s\n' "$dtb_rel"
         printf '}\n\n'
     done
 } > "$out"

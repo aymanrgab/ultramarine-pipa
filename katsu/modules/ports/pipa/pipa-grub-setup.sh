@@ -46,9 +46,9 @@ else
         printf 'set root=($boot)\n\n'
         for dtb_rel in "${dtb_rels[@]}"; do
             printf 'menuentry "Ultramarine Linux (Xiaomi Pad 6)" {\n'
-            printf '    devicetree ($boot)/%s\n' "$dtb_rel"
             printf '    linux ($boot)/%s %s\n' "$kernel_rel" "$CMDLINE"
             printf '    initrd ($boot)/%s\n' "$INITRAMFS_STABLE"
+            printf '    devicetree ($boot)/%s\n' "$dtb_rel"
             printf '}\n\n'
         done
     } > /boot/grub2/grub.cfg
