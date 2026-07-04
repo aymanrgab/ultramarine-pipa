@@ -74,6 +74,13 @@ LABEL=$ROOTFS_LABEL / ext4 defaults,x-systemd.growfs 0 1
 LABEL=$BOOT_LABEL /boot ext4 defaults 0 2
 EOF
 
+mkdir -p "$ROOT_MNT/boot/grub"
+cat > "$ROOT_MNT/boot/grub/grub.cfg" <<EOF
+search --no-floppy --label --set=boot $BOOT_LABEL
+set prefix=(\$boot)/grub2
+configfile (\$boot)/grub2/grub.cfg
+EOF
+
 umount "$ROOT_MNT"
 rmdir "$ROOT_MNT"
 
@@ -91,35 +98,51 @@ for f in "$MNT/boot/Image" "$MNT/boot/vmlinuz-$KERNEL_VER.uncompressed"; do
     [ -f "$f" ] && KERNEL_IMAGE_UNCOMPRESSED="$f" && break
 done
 INITRAMFS="$MNT/boot/initramfs-$KERNEL_VER.img"
-DTB="$MNT/boot/dtbs/qcom/sm8250-xiaomi-pipa.dtb"
+INITRAMFS_STABLE="initramfs-linux-pipa.img"
+
+if [ -z "$KERNEL_IMAGE" ] || [ ! -f "$KERNEL_IMAGE" ]; then
+    echo "ERROR: kernel image not found under $MNT/boot" >&2
+    ls -la "$MNT/boot/" >&2 || true
+    exit 1
+fi
 
 cp "$KERNEL_IMAGE" "$BOOT_MNT/Image.gz"
-[ -n "$KERNEL_IMAGE_UNCOMPRESSED" ] && cp "$KERNEL_IMAGE_UNCOMPRESSED" "$BOOT_MNT/Image"
-[ -f "$INITRAMFS" ] && cp "$INITRAMFS" "$BOOT_MNT/initramfs-$KERNEL_VER.img"
+[ -n "$KERNEL_IMAGE_UNCOMPRESSED" ] && [ -f "$KERNEL_IMAGE_UNCOMPRESSED" ] && cp "$KERNEL_IMAGE_UNCOMPRESSED" "$BOOT_MNT/Image"
+if [ -f "$INITRAMFS" ]; then
+    cp "$INITRAMFS" "$BOOT_MNT/initramfs-$KERNEL_VER.img"
+    cp "$INITRAMFS" "$BOOT_MNT/$INITRAMFS_STABLE"
+fi
+
 mkdir -p "$BOOT_MNT/dtbs/qcom" "$BOOT_MNT/grub2"
-[ -f "$DTB" ] && cp "$DTB" "$BOOT_MNT/dtbs/qcom/"
+shopt -s nullglob
+dtb_files=("$MNT/boot/dtbs/qcom"/sm8250-xiaomi-pipa*.dtb)
+shopt -u nullglob
+if [ ${#dtb_files[@]} -eq 0 ] && [ -f "$MNT/boot/dtbs/qcom/sm8250-xiaomi-pipa.dtb" ]; then
+    dtb_files=("$MNT/boot/dtbs/qcom/sm8250-xiaomi-pipa.dtb")
+fi
+if [ ${#dtb_files[@]} -eq 0 ]; then
+    echo "ERROR: no DTB found under $MNT/boot/dtbs/qcom" >&2
+    exit 1
+fi
+cp "${dtb_files[@]}" "$BOOT_MNT/dtbs/qcom/"
+
 [ -f "$MNT/boot/System.map-$KERNEL_VER" ] && cp "$MNT/boot/System.map-$KERNEL_VER" "$BOOT_MNT/"
 [ -f "$MNT/boot/config-$KERNEL_VER" ] && cp "$MNT/boot/config-$KERNEL_VER" "$BOOT_MNT/"
 
 TARGET_KERNEL_CMDLINE="root=LABEL=$ROOTFS_LABEL rw rootwait boot=LABEL=$BOOT_LABEL console=tty0 quiet clk_ignore_unused pd_ignore_unused"
 printf '%s\n' "$TARGET_KERNEL_CMDLINE" > "$BOOT_MNT/cmdline.txt"
 
-cat > "$BOOT_MNT/grub2/grub.cfg" <<GRUBCFG
-set timeout=5
-set default=0
+kernel_rel="Image.gz"
+[ -f "$BOOT_MNT/Image.gz" ] || kernel_rel="Image"
 
-menuentry "Ultramarine Linux (Xiaomi Pad 6)" {
-    linux /Image.gz $TARGET_KERNEL_CMDLINE
-    initrd /initramfs-${KERNEL_VER}.img
-    devicetree /dtbs/qcom/sm8250-xiaomi-pipa.dtb
-}
+dtb_rels=()
+for dtb in "${dtb_files[@]}"; do
+    dtb_rels+=("dtbs/qcom/$(basename "$dtb")")
+done
 
-menuentry "Ultramarine Linux (recovery)" {
-    linux /Image.gz $TARGET_KERNEL_CMDLINE systemd.unit=multi-user.target
-    initrd /initramfs-${KERNEL_VER}.img
-    devicetree /dtbs/qcom/sm8250-xiaomi-pipa.dtb
-}
-GRUBCFG
+"$REPO_ROOT/scripts/write-pipa-grub-cfg.sh" \
+    "$BOOT_MNT/grub2/grub.cfg" "$BOOT_LABEL" "$TARGET_KERNEL_CMDLINE" \
+    "$kernel_rel" "$INITRAMFS_STABLE" "${dtb_rels[@]}"
 
 umount "$BOOT_MNT"
 
