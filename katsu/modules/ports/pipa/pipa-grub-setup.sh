@@ -1,43 +1,42 @@
 #!/bin/bash
 set -x
 
+BOOT_LABEL="boot"
 KERNEL_VER=$(find /usr/lib/modules -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | head -n 1)
-CMDLINE="quiet clk_ignore_unused pd_ignore_unused"
+CMDLINE="root=LABEL=um-pipa rw rootwait boot=LABEL=${BOOT_LABEL} console=tty0 quiet clk_ignore_unused pd_ignore_unused"
 
-mkdir -p /boot/grub2
+mkdir -p /boot/grub /boot/grub2
 
+# Stage 1: rootfs redirect — tells GRUB to chain into the boot partition
+cat > /boot/grub/grub.cfg <<EOF
+search --no-floppy --label --set=boot ${BOOT_LABEL}
+set prefix=(\$boot)/grub2
+configfile (\$boot)/grub2/grub.cfg
+EOF
+
+# Stage 2: actual boot menu on /boot partition
 cat > /boot/grub2/grub.cfg <<GRUBEOF
 set timeout=5
 set default=0
 
 menuentry "Ultramarine Linux (Xiaomi Pad 6)" {
-    linux /Image.gz root=LABEL=um-pipa rw rootwait boot=LABEL=boot console=tty0 ${CMDLINE}
+    linux /Image.gz ${CMDLINE}
     initrd /initramfs-${KERNEL_VER}.img
     devicetree /dtbs/qcom/sm8250-xiaomi-pipa.dtb
 }
 
 menuentry "Ultramarine Linux (recovery)" {
-    linux /Image.gz root=LABEL=um-pipa rw rootwait boot=LABEL=boot console=tty0 systemd.unit=multi-user.target ${CMDLINE}
+    linux /Image.gz ${CMDLINE} systemd.unit=multi-user.target
     initrd /initramfs-${KERNEL_VER}.img
     devicetree /dtbs/qcom/sm8250-xiaomi-pipa.dtb
 }
 GRUBEOF
 
-bootdev=$(findmnt -n -o SOURCE /boot 2>/dev/null || findmnt -n -o SOURCE /)
-bootid=$(blkid -s UUID -o value "$bootdev" 2>/dev/null || echo "UNKNOWN")
-
-mkdir -p /boot/efi/EFI/fedora
-cat > /boot/efi/EFI/fedora/grub.cfg <<ESPEOF
-search --no-floppy --fs-uuid --set=dev ${bootid}
-set prefix=(\$dev)/grub2
-
-export \$prefix
-configfile \$prefix/grub.cfg
-ESPEOF
-
-dracut -fN --add-drivers "mmc qcom-scm" --regenerate-all 2>/dev/null || \
+# Regenerate initramfs (rely on pipa-dracut config, no explicit modules)
+dracut --force --kver "$KERNEL_VER" "/boot/initramfs-${KERNEL_VER}.img" 2>/dev/null || \
     echo "WARNING: dracut failed, initramfs may need regeneration on first boot"
 
+# Clean up build artifacts
 rm -f /var/lib/systemd/random-seed
 rm -f /etc/NetworkManager/system-connections/*.nmconnection
 rm -f /etc/machine-id

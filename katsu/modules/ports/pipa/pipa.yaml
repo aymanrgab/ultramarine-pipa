@@ -36,6 +36,7 @@ dnf:
 
     # Qualcomm firmware services
     - qrtr
+    - rmtfs
     - tqftpserv
     - pd-mapper
 

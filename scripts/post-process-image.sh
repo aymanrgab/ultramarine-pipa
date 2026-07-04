@@ -68,7 +68,7 @@ MKE2FS_DEVICE_PHYS_SECTSIZE=4096 MKE2FS_DEVICE_SECTSIZE=4096 \
     mkfs.ext4 -L "$ROOTFS_LABEL" "$OUTPUT_DIR/ultramarine_rootfs.raw"
 ROOT_MNT=$(mktemp -d)
 mount -o loop "$OUTPUT_DIR/ultramarine_rootfs.raw" "$ROOT_MNT"
-rsync -aHAX --exclude '/tmp/*' --exclude '/boot/*' "$MNT/" "$ROOT_MNT/"
+rsync -aHAX --exclude '/tmp/*' --exclude '/boot/*' --exclude '/boot/efi' "$MNT/" "$ROOT_MNT/"
 
 cat > "$ROOT_MNT/etc/fstab" <<EOF
 LABEL=$ROOTFS_LABEL / ext4 defaults,x-systemd.growfs 0 1
@@ -131,30 +131,49 @@ mount -o loop "$OUTPUT_DIR/ultramarine_esp.raw" "$ESP_MNT"
 
 if [ -d "$EFI_TEMPLATE_DIR/EFI" ]; then
     cp -r "$EFI_TEMPLATE_DIR/EFI" "$ESP_MNT/"
-elif mount "$ESP_PART" /mnt 2>/dev/null; then
-    cp -r /mnt/EFI "$ESP_MNT/" 2>/dev/null || true
-    umount /mnt
 fi
 
-mkdir -p "$ESP_MNT/EFI/fedora" "$ESP_MNT/EFI/BOOT"
-if [ -f "$MNT/boot/efi/EFI/fedora/grubaa64.efi" ]; then
-    cp "$MNT/boot/efi/EFI/fedora/grubaa64.efi" "$ESP_MNT/EFI/fedora/"
-    cp "$MNT/boot/efi/EFI/fedora/grubaa64.efi" "$ESP_MNT/EFI/BOOT/BOOTAA64.EFI"
+# Copy EFI binaries from Katsu image (shim + grub from Fedora packages)
+ESP_SRC=""
+if mount "$ESP_PART" /mnt 2>/dev/null; then
+    ESP_SRC="/mnt"
 fi
-if [ -f "$MNT/boot/efi/EFI/fedora/shimaa64.efi" ]; then
-    cp "$MNT/boot/efi/EFI/fedora/shimaa64.efi" "$ESP_MNT/EFI/fedora/"
-    cp "$MNT/boot/efi/EFI/fedora/shimaa64.efi" "$ESP_MNT/EFI/BOOT/BOOTAA64.EFI"
-fi
+for efi_src_dir in "$ESP_SRC/EFI/fedora" "$MNT/boot/efi/EFI/fedora" "$MNT/usr/lib/grub/arm64-efi"; do
+    [ -d "$efi_src_dir" ] || continue
+    mkdir -p "$ESP_MNT/EFI/fedora" "$ESP_MNT/EFI/BOOT"
+    for efi_file in shimaa64.efi grubaa64.efi mmaa64.efi; do
+        [ -f "$efi_src_dir/$efi_file" ] && cp "$efi_src_dir/$efi_file" "$ESP_MNT/EFI/fedora/"
+    done
+    [ -f "$ESP_MNT/EFI/fedora/shimaa64.efi" ] && \
+        cp "$ESP_MNT/EFI/fedora/shimaa64.efi" "$ESP_MNT/EFI/BOOT/BOOTAA64.EFI"
+    break
+done
+[ -n "$ESP_SRC" ] && umount /mnt
 
-for vendor_dir in fedora BOOT; do
-cat > "$ESP_MNT/EFI/$vendor_dir/grub.cfg" 2>/dev/null <<ESPCFG || true
-search --label $BOOT_LABEL --set prefix --no-floppy
+# Write shim redirect grub.cfg for each vendor directory
+for shim_vendor in fedora BOOT; do
+    mkdir -p "$ESP_MNT/EFI/$shim_vendor"
+    cat > "$ESP_MNT/EFI/$shim_vendor/grub.cfg" <<ESPCFG
+if [ -f \${config_directory}/bootuuid.cfg ]; then
+  source \${config_directory}/bootuuid.cfg
+fi
+if [ -n "\${BOOT_UUID}" ]; then
+  search --fs-uuid "\${BOOT_UUID}" --set prefix --no-floppy
+else
+  search --label $BOOT_LABEL --set prefix --no-floppy
+fi
 if [ -d (\$prefix)/grub2 ]; then
   set prefix=(\$prefix)/grub2
+  configfile \$prefix/grub.cfg
+else
+  set prefix=(\$prefix)/boot/grub2
   configfile \$prefix/grub.cfg
 fi
 boot
 ESPCFG
+    cat > "$ESP_MNT/EFI/$shim_vendor/bootuuid.cfg" <<UUIDCFG
+set BOOT_UUID=""
+UUIDCFG
 done
 
 umount "$ESP_MNT"

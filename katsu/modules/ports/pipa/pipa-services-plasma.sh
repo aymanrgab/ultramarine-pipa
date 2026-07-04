@@ -1,17 +1,38 @@
 #!/bin/bash
 set -x
 
-systemctl enable hexagonrpcd-sdsp.service
-systemctl enable hexagonrpcd-adsp-sensorspd.service
-systemctl enable pipa-sensors-persist.service
-systemctl enable pipa-audio-init.service 2>/dev/null || true
-systemctl enable bootmac-bluetooth.service
-systemctl enable swclock-offset-boot.service
-systemctl enable swclock-offset-shutdown.service
-
-systemctl mask hexagonrpcd-adsp-rootpd.service
-
-systemctl enable NetworkManager.service
+# Display manager
 systemctl enable sddm.service
-systemctl enable bluetooth.service
-systemctl enable tuned.service
+
+# Core services
+systemctl enable NetworkManager bluetooth systemd-resolved systemd-timesyncd
+
+# Power management
+systemctl enable tuned tuned-ppd
+
+# Bluetooth MAC
+systemctl enable bootmac-bluetooth || true
+
+# Clock offset (no RTC on pipa)
+systemctl enable swclock-offset-boot.service swclock-offset-shutdown.service
+
+# Qualcomm firmware services
+systemctl enable pd-mapper rmtfs tqftpserv || true
+
+# Sensor stack
+systemctl enable \
+    pipa-sensors-persist \
+    hexagonrpcd-sdsp \
+    hexagonrpcd-adsp-sensorspd \
+    iio-sensor-proxy \
+    pipa-audio-init || true
+
+# Masked services
+systemctl mask hexagonrpcd-adsp-rootpd.service || true
+
+# Plasma virtual keyboard
+mkdir -p /etc/environment.d
+cat > /etc/environment.d/90-plasma-keyboard.conf <<EOF
+KWIN_IM_SHOW_ALWAYS=1
+PLASMA_KEYBOARD_USE_QT_LAYOUTS=1
+EOF

@@ -115,6 +115,10 @@ dnf:
     - wireplumber
     - alsa-utils
 
+    # System services
+    - openssh-server
+    - systemd-resolved
+
   exclude:
     - generic-release*
     - kernel
