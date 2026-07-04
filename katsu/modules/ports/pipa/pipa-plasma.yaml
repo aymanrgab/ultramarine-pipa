@@ -45,6 +45,7 @@ dnf:
     - --setopt=max_parallel_downloads=20
     - --setopt=install_weak_deps=True
     - --allowerasing
+    - --skip-unavailable
     - --nobest
   packages:
     # Base system (Ultramarine base-disk + base)
