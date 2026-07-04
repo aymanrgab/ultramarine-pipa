@@ -29,8 +29,8 @@ EOF
 if [ -x /usr/local/bin/pipa-refresh-grub-config ]; then
     PIPA_INITRAMFS_SOURCE="/boot/${INITRAMFS_STABLE}" /usr/local/bin/pipa-refresh-grub-config
 else
-    kernel_rel="Image.gz"
-    [ -f /boot/Image.gz ] || kernel_rel="Image"
+    kernel_rel="Image"
+    [ -f /boot/Image ] || kernel_rel="Image.gz"
 
     dtb_rels=()
     shopt -s nullglob
@@ -42,13 +42,13 @@ else
 
     {
         printf 'set default=0\nset timeout=5\n\n'
-        printf 'search --label %s --set=boot --no-floppy\n' "$BOOT_LABEL"
-        printf 'set root=($boot)\n\n'
+        printf 'insmod part_gpt\ninsmod ext2\ninsmod gzio\n\n'
+        printf 'search --no-floppy --label %s --set=root\n\n' "$BOOT_LABEL"
         for dtb_rel in "${dtb_rels[@]}"; do
             printf 'menuentry "Ultramarine Linux (Xiaomi Pad 6)" {\n'
-            printf '    linux ($boot)/%s %s\n' "$kernel_rel" "$CMDLINE"
-            printf '    initrd ($boot)/%s\n' "$INITRAMFS_STABLE"
-            printf '    devicetree ($boot)/%s\n' "$dtb_rel"
+            printf '    linux /%s --- %s\n' "$kernel_rel" "$CMDLINE"
+            printf '    initrd /%s\n' "$INITRAMFS_STABLE"
+            printf '    devicetree /%s\n' "$dtb_rel"
             printf '}\n\n'
         done
     } > /boot/grub2/grub.cfg

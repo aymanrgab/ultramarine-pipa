@@ -1,5 +1,5 @@
 #!/bin/bash
-# Generate GRUB config with ($boot)/ paths (required when prefix is /grub2).
+# Generate GRUB config for pipa boot partition.
 # Usage: write-pipa-grub-cfg.sh <output> <boot_label> <cmdline> <kernel_rel> <initramfs_rel> [dtb_rel ...]
 set -euo pipefail
 
@@ -19,8 +19,10 @@ fi
 {
     printf 'set default=0\n'
     printf 'set timeout=5\n\n'
-    printf 'search --label %s --set=boot --no-floppy\n' "$boot_label"
-    printf 'set root=($boot)\n\n'
+    printf 'insmod part_gpt\n'
+    printf 'insmod ext2\n'
+    printf 'insmod gzio\n\n'
+    printf 'search --no-floppy --label %s --set=root\n\n' "$boot_label"
 
     for dtb_rel in "${dtb_rels[@]}"; do
         dtb_name="$(basename "$dtb_rel" .dtb)"
@@ -32,15 +34,15 @@ fi
         esac
 
         printf 'menuentry "Ultramarine Linux (Xiaomi Pad 6) - %s" {\n' "$title"
-        printf '    linux ($boot)/%s %s\n' "$kernel_rel" "$cmdline"
-        printf '    initrd ($boot)/%s\n' "$initramfs_rel"
-        printf '    devicetree ($boot)/%s\n' "$dtb_rel"
+        printf '    linux /%s --- %s\n' "$kernel_rel" "$cmdline"
+        printf '    initrd /%s\n' "$initramfs_rel"
+        printf '    devicetree /%s\n' "$dtb_rel"
         printf '}\n\n'
 
         printf 'menuentry "Ultramarine Linux (recovery) - %s" {\n' "$title"
-        printf '    linux ($boot)/%s %s systemd.unit=multi-user.target\n' "$kernel_rel" "$cmdline"
-        printf '    initrd ($boot)/%s\n' "$initramfs_rel"
-        printf '    devicetree ($boot)/%s\n' "$dtb_rel"
+        printf '    linux /%s --- %s systemd.unit=multi-user.target\n' "$kernel_rel" "$cmdline"
+        printf '    initrd /%s\n' "$initramfs_rel"
+        printf '    devicetree /%s\n' "$dtb_rel"
         printf '}\n\n'
     done
 } > "$out"

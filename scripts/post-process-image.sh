@@ -132,8 +132,8 @@ cp "${dtb_files[@]}" "$BOOT_MNT/dtbs/qcom/"
 TARGET_KERNEL_CMDLINE="root=LABEL=$ROOTFS_LABEL rw rootwait boot=LABEL=$BOOT_LABEL console=tty0 quiet clk_ignore_unused pd_ignore_unused"
 printf '%s\n' "$TARGET_KERNEL_CMDLINE" > "$BOOT_MNT/cmdline.txt"
 
-kernel_rel="Image.gz"
-[ -f "$BOOT_MNT/Image.gz" ] || kernel_rel="Image"
+kernel_rel="Image"
+[ -f "$BOOT_MNT/Image" ] || kernel_rel="Image.gz"
 
 dtb_rels=()
 for dtb in "${dtb_files[@]}"; do
