@@ -11,6 +11,9 @@ dnf:
     - kernel-pipa
     - kernel-pipa-modules
     - xiaomi-pipa-firmware
+    - linux-firmware
+    - qcom-firmware
+    - atheros-firmware
 
     # Boot and system
     - pipa-dracut

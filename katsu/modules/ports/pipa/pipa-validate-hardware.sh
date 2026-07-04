@@ -8,6 +8,14 @@ assert_file() {
     fi
 }
 
+assert_firmware() {
+    if [ -f "$1" ] || [ -f "${1}.xz" ]; then
+        return 0
+    fi
+    echo "Missing required firmware: $1 (or ${1}.xz)" >&2
+    exit 1
+}
+
 echo "Validating pipa audio configuration..."
 if ! rpm -q pipa-sound-conf &>/dev/null; then
     echo "pipa-sound-conf is not installed; audio packages were skipped during image build." >&2
@@ -35,12 +43,12 @@ if ! [ -f /usr/lib/libssc.so.0 ] && ! [ -f /usr/lib64/libssc.so.0 ] && \
 fi
 
 echo "Validating critical firmware payloads..."
-assert_file /usr/lib/firmware/qcom/a650_sqe.fw
-assert_file /usr/lib/firmware/qcom/a650_gmu.bin
-assert_file /usr/lib/firmware/qca/htbtfw20.tlv
-assert_file /usr/lib/firmware/ath11k/QCA6390/hw2.0/amss.bin
-assert_file /usr/lib/firmware/ath11k/QCA6390/hw2.0/board-2.bin
-assert_file /usr/lib/firmware/ath11k/QCA6390/hw2.0/m3.bin
+assert_firmware /usr/lib/firmware/qcom/a650_sqe.fw
+assert_firmware /usr/lib/firmware/qcom/a650_gmu.bin
+assert_firmware /usr/lib/firmware/qca/htbtfw20.tlv
+assert_firmware /usr/lib/firmware/ath11k/QCA6390/hw2.0/amss.bin
+assert_firmware /usr/lib/firmware/ath11k/QCA6390/hw2.0/board-2.bin
+assert_firmware /usr/lib/firmware/ath11k/QCA6390/hw2.0/m3.bin
 
 assert_file /etc/profile.d/90-pipa-gsk-renderer.sh
 
