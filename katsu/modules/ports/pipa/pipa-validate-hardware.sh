@@ -9,6 +9,10 @@ assert_file() {
 }
 
 echo "Validating pipa audio configuration..."
+if ! rpm -q pipa-sound-conf &>/dev/null; then
+    echo "pipa-sound-conf is not installed; audio packages were skipped during image build." >&2
+    exit 1
+fi
 assert_file /usr/share/alsa/ucm2/conf.d/sm8250/Xiaomi\ Pad\ 6.conf
 assert_file /usr/share/alsa/ucm2/conf.d/sm8250/sm8250.conf
 assert_file /usr/share/alsa/ucm2/conf.d/sm8250/Xiaomi-Pad6-pipa-M82.conf
