@@ -5,7 +5,13 @@ set -x
 systemctl enable sddm.service
 
 # Core services
-systemctl enable NetworkManager bluetooth systemd-resolved systemd-timesyncd
+systemctl enable sshd NetworkManager iwd bluetooth systemd-resolved systemd-timesyncd
+
+mkdir -p /etc/NetworkManager/conf.d
+cat > /etc/NetworkManager/conf.d/wifi-iwd.conf <<'EOF'
+[device]
+wifi.backend=iwd
+EOF
 
 # Power management
 systemctl enable tuned tuned-ppd

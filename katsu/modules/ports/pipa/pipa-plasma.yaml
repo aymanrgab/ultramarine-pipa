@@ -19,10 +19,14 @@ scripts:
       priority: 50
       name: Enable pipa services
       file: pipa-services-plasma.sh
-    - id: pipa-user
+    - id: pipa-firstboot
       priority: 55
-      name: Create default user
-      file: pipa-user-setup.sh
+      name: Install first-boot setup wizard
+      file: pipa-firstboot-install-plasma.sh
+    - id: pipa-validate
+      priority: 58
+      name: Validate pipa hardware payloads
+      file: pipa-validate-hardware.sh
     - id: default-target
       priority: 60
       name: Set default target to graphical
@@ -110,10 +114,14 @@ dnf:
 
     # Hardware support
     - linux-firmware
+    - alsa-ucm-conf
     - pipewire
+    - pipewire-alsa
     - pipewire-pulseaudio
     - wireplumber
     - alsa-utils
+    - iwd
+    - kdialog
 
     # System services
     - openssh-server

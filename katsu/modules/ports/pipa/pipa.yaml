@@ -22,6 +22,7 @@ dnf:
     - bootmac
 
     # Audio and camera
+    - alsa-ucm-conf-sm8250
     - pipa-sound-conf
     - libcamera
     - libcamera-ipa
@@ -42,7 +43,10 @@ dnf:
 
     # GPU, display, wireless
     - mesa-dri-drivers
+    - mesa-vulkan-drivers
+    - libglvnd-glx
     - wireless-regdb
+    - bluez
 
     # Power management
     - tuned
