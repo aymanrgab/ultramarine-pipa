@@ -12,6 +12,6 @@ systemctl enable swclock-offset-shutdown.service
 systemctl mask hexagonrpcd-adsp-rootpd.service
 
 systemctl enable NetworkManager.service
-systemctl enable gdm.service 2>/dev/null || true
+systemctl enable sddm.service
 systemctl enable bluetooth.service
 systemctl enable tuned.service

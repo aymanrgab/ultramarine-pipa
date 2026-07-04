@@ -23,14 +23,15 @@ jobs:
           no_output_timeout: 30m
           command: docker build -t ultramarine-pipa-builder .
       - run:
-          name: Build Ultramarine pipa image
-          no_output_timeout: 120m
+          name: Build Ultramarine pipa images (GNOME + Plasma)
+          no_output_timeout: 180m
           command: |
             mkdir -p output
             docker run --rm --privileged \
               -v "$PWD/output:/build/output" \
               -v /dev:/dev \
               -e "BUILD_GIT_REV=${CIRCLE_SHA1}" \
+              -e "BUILD_VARIANTS=gnome plasma" \
               -e "PIPA_PKGS_BRANCH=<< pipeline.parameters.pipa_pkgs_branch >>" \
               ultramarine-pipa-builder
       - run:

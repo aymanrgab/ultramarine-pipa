@@ -1,0 +1,146 @@
+builder: dnf
+distro: Ultramarine Plasma 44 (Xiaomi Pad 6)
+
+import:
+  - pipa.yaml
+
+out_file: ultramarine-plasma-44-pipa.raw
+
+bootloader: grub
+
+kernel_cmdline: "quiet clk_ignore_unused pd_ignore_unused"
+
+scripts:
+  post:
+    - id: grub
+      name: Set up GRUB for pipa
+      file: pipa-grub-setup.sh
+    - id: pipa-services
+      priority: 50
+      name: Enable pipa services
+      file: pipa-services-plasma.sh
+    - id: pipa-user
+      priority: 55
+      name: Create default user
+      file: pipa-user-setup.sh
+    - id: default-target
+      priority: 60
+      name: Set default target to graphical
+      file: pipa-default-target.sh
+
+dnf:
+  releasever: 44
+  exec: dnf5
+  arch: aarch64
+  options:
+    - --setopt=cachedir=/var/cache/dnf
+    - --nogpgcheck
+    - --setopt=keepcache=True
+    - --allowerasing
+    - --skip-unavailable
+    - --skip-broken
+  packages:
+    # Base system
+    - filesystem
+    - setup
+    - glibc
+    - glibc-common
+    - dnf
+    - dnf5
+    - rpm
+    - systemd
+    - dracut
+    - dracut-config-generic
+    - NetworkManager
+    - "@core"
+    - fedora-repos
+    - efibootmgr
+    - sudo
+    - passwd
+    - util-linux
+    - coreutils
+    - bash
+    - less
+    - vim-minimal
+
+    # Ultramarine release
+    - ultramarine-release
+    - ultramarine-release-common
+    - ultramarine-release-kde
+    - ultramarine-release-identity-kde
+    - ultramarine-repos
+    - terra-release
+
+    # RPM Fusion
+    - rpmfusion-free-release
+    - rpmfusion-nonfree-release
+
+    # aarch64 boot
+    - grub2-efi-aa64
+    - grub2-efi-aa64-modules
+    - shim-aa64
+    - grub2-tools
+
+    # KDE Plasma desktop
+    - plasma-desktop
+    - plasma-workspace
+    - plasma-nm
+    - plasma-pa
+    - plasma-systemmonitor
+    - plasma-discover
+    - plasma-discover-packagekit
+    - sddm
+    - sddm-wayland-plasma
+    - kscreen
+    - powerdevil
+    - bluedevil
+    - kde-settings
+    - xdg-desktop-portal-kde
+
+    # KDE apps
+    - konsole
+    - dolphin
+    - kate
+    - gwenview
+    - spectacle
+    - ark
+    - okular
+    - kcalc
+    - kamoso
+
+    # Hardware support
+    - linux-firmware
+    - pipewire
+    - pipewire-pulseaudio
+    - wireplumber
+    - alsa-utils
+
+  exclude:
+    - generic-release*
+    - kernel
+    - kernel-core
+    - kernel-debug*
+    - kernel-devel*
+    - kernel-modules*
+
+disk:
+  size: 8GiB
+  partitions:
+    - label: EFI
+      type: esp
+      size: 512MiB
+      filesystem: efi
+      mountpoint: /boot/efi
+
+    - label: boot
+      type: xbootldr
+      size: 1GiB
+      filesystem: ext4
+      mountpoint: /boot
+
+    - label: root
+      flags:
+        - grow-fs
+      type: root
+      filesystem: ext4
+      mountpoint: /

@@ -3,8 +3,9 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DATE=$(date +%Y%m%d)
-IMAGE_NAME="ultramarine-pipa-gnome-${DATE}"
-RAW_IMAGE="${1:-$REPO_ROOT/ultramarine-gnome-44-pipa.raw}"
+VARIANT="${VARIANT_NAME:-gnome}"
+IMAGE_NAME="ultramarine-pipa-${VARIANT}-${DATE}"
+RAW_IMAGE="${1:-$REPO_ROOT/katsu-work/image/katsu.img}"
 OUTPUT_DIR="$REPO_ROOT/output/$IMAGE_NAME"
 
 ROOTFS_LABEL="um-pipa"
@@ -247,7 +248,7 @@ echo "=== Writing build metadata ==="
 cat > "$OUTPUT_DIR/BUILDINFO.txt" <<EOF
 Ultramarine OS Pipa Image Build
 ================================
-Desktop:        GNOME
+Desktop:        ${VARIANT}
 Build date:     $DATE
 Kernel:         ${KERNEL_VER:-unknown}
 Rootfs label:   $ROOTFS_LABEL
