@@ -14,7 +14,6 @@ ESP_LABEL="UMPIPAESP"
 
 SILICIUM_URL="https://github.com/onesaladleaf/Mu-Silicium/releases/download/v3.5-pocketblue/Mu-pipa.img"
 VBMETA_DISABLED="$REPO_ROOT/assets/vbmeta-disabled.img"
-EFI_TEMPLATE_DIR="$REPO_ROOT/assets/efi-template"
 
 if [ "$(id -u)" -ne 0 ]; then
     echo "Must be run as root"
@@ -129,26 +128,40 @@ truncate -s 128M "$OUTPUT_DIR/ultramarine_esp.raw"
 mkfs.fat -F 16 -n "$ESP_LABEL" "$OUTPUT_DIR/ultramarine_esp.raw"
 mount -o loop "$OUTPUT_DIR/ultramarine_esp.raw" "$ESP_MNT"
 
-if [ -d "$EFI_TEMPLATE_DIR/EFI" ]; then
-    cp -r "$EFI_TEMPLATE_DIR/EFI" "$ESP_MNT/"
+# Copy EFI binaries from the Katsu-built image (shim/grub from Fedora packages)
+KATSU_ESP_MNT=$(mktemp -d)
+if mount "$ESP_PART" "$KATSU_ESP_MNT" 2>/dev/null; then
+    if [ -d "$KATSU_ESP_MNT/EFI" ]; then
+        cp -r "$KATSU_ESP_MNT/EFI" "$ESP_MNT/"
+    fi
+    umount "$KATSU_ESP_MNT"
+fi
+rmdir "$KATSU_ESP_MNT" 2>/dev/null || true
+
+if [ ! -d "$ESP_MNT/EFI/fedora" ]; then
+    for efi_src in \
+        "$MNT/boot/efi/EFI/fedora" \
+        "$MNT/boot/efi/EFI/BOOT" \
+        "$MNT/usr/lib/shim" \
+        "$MNT/usr/lib/grub/arm64-efi"; do
+        [ -d "$efi_src" ] || continue
+        mkdir -p "$ESP_MNT/EFI/fedora" "$ESP_MNT/EFI/BOOT"
+        for efi_file in shimaa64.efi grubaa64.efi mmaa64.efi; do
+            [ -f "$efi_src/$efi_file" ] && cp "$efi_src/$efi_file" "$ESP_MNT/EFI/fedora/"
+        done
+        [ -f "$ESP_MNT/EFI/fedora/shimaa64.efi" ] || [ -f "$ESP_MNT/EFI/fedora/grubaa64.efi" ] && break
+    done
 fi
 
-# Copy EFI binaries from Katsu image (shim + grub from Fedora packages)
-ESP_SRC=""
-if mount "$ESP_PART" /mnt 2>/dev/null; then
-    ESP_SRC="/mnt"
+mkdir -p "$ESP_MNT/EFI/fedora" "$ESP_MNT/EFI/BOOT"
+if [ -f "$ESP_MNT/EFI/fedora/shimaa64.efi" ]; then
+    cp "$ESP_MNT/EFI/fedora/shimaa64.efi" "$ESP_MNT/EFI/BOOT/BOOTAA64.EFI"
+elif [ -f "$ESP_MNT/EFI/fedora/grubaa64.efi" ]; then
+    cp "$ESP_MNT/EFI/fedora/grubaa64.efi" "$ESP_MNT/EFI/BOOT/BOOTAA64.EFI"
+else
+    echo "ERROR: No shimaa64.efi or grubaa64.efi found in Katsu image" >&2
+    exit 1
 fi
-for efi_src_dir in "$ESP_SRC/EFI/fedora" "$MNT/boot/efi/EFI/fedora" "$MNT/usr/lib/grub/arm64-efi"; do
-    [ -d "$efi_src_dir" ] || continue
-    mkdir -p "$ESP_MNT/EFI/fedora" "$ESP_MNT/EFI/BOOT"
-    for efi_file in shimaa64.efi grubaa64.efi mmaa64.efi; do
-        [ -f "$efi_src_dir/$efi_file" ] && cp "$efi_src_dir/$efi_file" "$ESP_MNT/EFI/fedora/"
-    done
-    [ -f "$ESP_MNT/EFI/fedora/shimaa64.efi" ] && \
-        cp "$ESP_MNT/EFI/fedora/shimaa64.efi" "$ESP_MNT/EFI/BOOT/BOOTAA64.EFI"
-    break
-done
-[ -n "$ESP_SRC" ] && umount /mnt
 
 # Write shim redirect grub.cfg for each vendor directory
 for shim_vendor in fedora BOOT; do
