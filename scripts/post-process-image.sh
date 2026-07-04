@@ -105,10 +105,7 @@ mkdir -p "$BOOT_MNT/dtbs/qcom" "$BOOT_MNT/grub2"
 TARGET_KERNEL_CMDLINE="root=LABEL=$ROOTFS_LABEL rw rootwait boot=LABEL=$BOOT_LABEL console=tty0 quiet clk_ignore_unused pd_ignore_unused"
 printf '%s\n' "$TARGET_KERNEL_CMDLINE" > "$BOOT_MNT/cmdline.txt"
 
-if [ -d "$MNT/boot/grub2" ] && [ -f "$MNT/boot/grub2/grub.cfg" ]; then
-    cp -a "$MNT/boot/grub2/." "$BOOT_MNT/grub2/"
-else
-    cat > "$BOOT_MNT/grub2/grub.cfg" <<GRUBCFG
+cat > "$BOOT_MNT/grub2/grub.cfg" <<GRUBCFG
 set timeout=5
 set default=0
 
@@ -117,8 +114,13 @@ menuentry "Ultramarine Linux (Xiaomi Pad 6)" {
     initrd /initramfs-${KERNEL_VER}.img
     devicetree /dtbs/qcom/sm8250-xiaomi-pipa.dtb
 }
+
+menuentry "Ultramarine Linux (recovery)" {
+    linux /Image.gz $TARGET_KERNEL_CMDLINE systemd.unit=multi-user.target
+    initrd /initramfs-${KERNEL_VER}.img
+    devicetree /dtbs/qcom/sm8250-xiaomi-pipa.dtb
+}
 GRUBCFG
-fi
 
 umount "$BOOT_MNT"
 
