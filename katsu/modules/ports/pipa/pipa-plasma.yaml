@@ -93,8 +93,7 @@ dnf:
     - plasma-systemmonitor
     - plasma-discover
     - plasma-discover-packagekit
-    - sddm
-    - sddm-wayland-plasma
+    - plasma-login-manager
     - kscreen
     - powerdevil
     - bluedevil

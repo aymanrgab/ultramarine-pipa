@@ -2,7 +2,7 @@
 set -x
 
 # Display manager
-systemctl enable sddm.service
+systemctl enable plasmalogin.service
 
 # Core services
 systemctl enable sshd NetworkManager iwd bluetooth systemd-resolved systemd-timesyncd

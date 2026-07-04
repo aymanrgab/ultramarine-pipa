@@ -190,6 +190,9 @@ cat > /etc/hosts <<HOSTS
 HOSTS
 
 case "$PIPA_FIRSTBOOT_DM" in
+    plasmalogin)
+        rm -f /etc/plasmalogin.conf.d/10-firstboot-autologin.conf /etc/plasmalogin.conf.d/05-default-session.conf
+        ;;
     sddm)
         rm -f /etc/sddm.conf.d/10-firstboot-autologin.conf
         ;;

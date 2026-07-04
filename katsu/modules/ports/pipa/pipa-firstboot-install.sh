@@ -146,6 +146,7 @@ cat > /etc/hosts <<HOSTS
 HOSTS
 
 case "$PIPA_FIRSTBOOT_DM" in
+    plasmalogin) rm -f /etc/plasmalogin.conf.d/10-firstboot-autologin.conf /etc/plasmalogin.conf.d/05-default-session.conf ;;
     sddm) rm -f /etc/sddm.conf.d/10-firstboot-autologin.conf ;;
     gdm) rm -f /etc/gdm/custom.conf.d/10-firstboot-autologin.conf ;;
 esac
@@ -157,6 +158,26 @@ SETUP_EOF
 fi
 
 case "$FIRSTBOOT_DM" in
+    plasmalogin)
+        SESSION_FILE="$(first_existing_file \
+            /usr/share/wayland-sessions/plasmawayland.desktop \
+            /usr/share/wayland-sessions/plasma.desktop \
+            /usr/share/xsessions/plasma.desktop \
+        )"
+        SESSION_NAME="$(basename "$SESSION_FILE")"
+
+        install -d /etc/plasmalogin.conf.d
+        cat > /etc/plasmalogin.conf.d/05-default-session.conf <<EOF
+[Sessions]
+DefaultSession=$SESSION_NAME
+EOF
+        cat > /etc/plasmalogin.conf.d/10-firstboot-autologin.conf <<EOF
+[Autologin]
+User=root
+Session=$SESSION_NAME
+Relogin=false
+EOF
+        ;;
     sddm)
         SESSION_FILE="$(first_existing_file \
             /usr/share/wayland-sessions/plasmawayland.desktop \
