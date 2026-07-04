@@ -22,7 +22,7 @@ scripts:
     - id: pipa-firstboot
       priority: 55
       name: Install first-boot setup wizard
-      file: pipa-firstboot-install-plasma.sh
+      file: pipa-firstboot-install.sh
     - id: pipa-validate
       priority: 58
       name: Validate pipa hardware payloads
@@ -36,15 +36,20 @@ dnf:
   releasever: 44
   exec: dnf5
   arch: aarch64
+  repodir: repodir/
   options:
     - --setopt=cachedir=/var/cache/dnf
     - --nogpgcheck
     - --setopt=keepcache=True
+    - --setopt=tsflags=
+    - --setopt=max_parallel_downloads=20
+    - --setopt=install_weak_deps=True
     - --allowerasing
     - --skip-unavailable
     - --skip-broken
+    - --nobest
   packages:
-    # Base system
+    # Base system (Ultramarine base-disk + base)
     - filesystem
     - setup
     - glibc
@@ -55,8 +60,11 @@ dnf:
     - systemd
     - dracut
     - dracut-config-generic
+    - dracut-tools
     - NetworkManager
     - "@core"
+    - "@standard"
+    - "@hardware-support"
     - fedora-repos
     - efibootmgr
     - sudo
@@ -64,16 +72,17 @@ dnf:
     - util-linux
     - coreutils
     - bash
-    - less
-    - vim-minimal
-
-    # Ultramarine release
-    - ultramarine-release
+    - nano
+    - ultramarine-raw-filesystem
+    - plymouth
+    - plymouth-system-theme
+    - plymouth-theme-spinner
     - ultramarine-release-common
-    - ultramarine-release-kde
-    - ultramarine-release-identity-kde
+    - ultramarine-release
     - ultramarine-repos
+    - ultramarine-logos
     - terra-release
+    - taidan-ultramarine-configs
 
     # RPM Fusion
     - rpmfusion-free-release
@@ -85,57 +94,46 @@ dnf:
     - shim-aa64
     - grub2-tools
 
-    # KDE Plasma desktop
-    - plasma-desktop
-    - plasma-workspace
-    - plasma-nm
-    - plasma-pa
-    - plasma-systemmonitor
-    - plasma-discover
-    - plasma-discover-packagekit
-    - plasma-login-manager
-    - kscreen
-    - powerdevil
-    - bluedevil
-    - kde-settings
-    - xdg-desktop-portal-kde
+    # Full Ultramarine Plasma desktop
+    - "@ultramarine-plasma-product-environment"
+    - "@ultramarine-plasma-no-flatpak-apps"
+    - "@libreoffice"
+    - ultramarine-release-plasma
+    - ultramarine-release-identity-plasma
 
-    # KDE apps
-    - konsole
-    - dolphin
-    - kate
-    - gwenview
-    - spectacle
-    - ark
-    - okular
-    - kcalc
-    - kamoso
-
-    # Hardware support
-    - linux-firmware
-    - alsa-ucm-conf
-    - pipewire
-    - pipewire-alsa
-    - pipewire-pulseaudio
-    - wireplumber
-    - alsa-utils
+    # Pipa-specific extras
     - iwd
     - kdialog
-
-    # System services
     - openssh-server
     - systemd-resolved
 
   exclude:
+    - fedora-release*
     - generic-release*
     - kernel
     - kernel-core
     - kernel-debug*
     - kernel-devel*
     - kernel-modules*
+    - initial-setup*
+    - ibus
+    - ibus-mozc
+    - ibus-anthy
+    - ibus-qt
+    - ibus-m17n
+    - ibus-hangul
+    - ibus-libpinyin
+    - ibus-typing-booster
+    - anthy
+    - fedora-third-party
+    - fedora-flathub-remote
+    - fedora-workstation-repositories
+    - setroubleshoot
+    - setroubleshoot-plugins
+    - setroubleshoot-server
 
 disk:
-  size: 8GiB
+  size: 16GiB
   partitions:
     - label: EFI
       type: esp

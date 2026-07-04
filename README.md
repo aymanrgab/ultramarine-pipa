@@ -17,6 +17,10 @@ from the remote DNF repo at build time.
 - USB (host and peripheral)
 - Battery and charging
 
+Images ship the full Ultramarine GNOME or Plasma product environment (LibreOffice,
+Firefox, Ultramarine branding, and the complete desktop app set) with pipa-specific
+hardware support layered on top.
+
 ## Repository structure
 
 ```

@@ -1,8 +1,17 @@
 #!/bin/bash
 set -eux
 
-FIRSTBOOT_DM="${1:-gdm}"
-MODULE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ -n "${PIPA_FIRSTBOOT_DM:-}" ]; then
+    FIRSTBOOT_DM="$PIPA_FIRSTBOOT_DM"
+elif rpm -q plasma-login-manager &>/dev/null; then
+    FIRSTBOOT_DM=plasmalogin
+elif rpm -q gdm &>/dev/null; then
+    FIRSTBOOT_DM=gdm
+elif rpm -q sddm &>/dev/null; then
+    FIRSTBOOT_DM=sddm
+else
+    FIRSTBOOT_DM=gdm
+fi
 
 first_existing_file() {
     local candidate
@@ -15,10 +24,7 @@ first_existing_file() {
     return 1
 }
 
-if [ -f "$MODULE_DIR/pipa-firstboot-setup.sh" ]; then
-    install -Dm755 "$MODULE_DIR/pipa-firstboot-setup.sh" /usr/local/bin/pipa-firstboot-setup
-else
-    install -Dm755 /dev/stdin /usr/local/bin/pipa-firstboot-setup <<'SETUP_EOF'
+install -Dm755 /dev/stdin /usr/local/bin/pipa-firstboot-setup <<'SETUP_EOF'
 #!/bin/sh
 set -eu
 
@@ -155,7 +161,6 @@ rm -f "$AUTOSTART_FILE" "$SENTINEL"
 prompt_info "Setup complete.\n\nUser '$username' was created, the hostname was set to '$hostname', and the system will now reboot." || true
 systemctl reboot
 SETUP_EOF
-fi
 
 case "$FIRSTBOOT_DM" in
     plasmalogin)
