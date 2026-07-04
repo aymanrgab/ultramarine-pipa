@@ -32,6 +32,7 @@ BOOT_MNT=$(mktemp -d)
 ESP_MNT=$(mktemp -d)
 
 cleanup() {
+    umount "$MNT/boot" 2>/dev/null || true
     umount "$MNT" 2>/dev/null || true
     umount "$BOOT_MNT" 2>/dev/null || true
     umount "$ESP_MNT" 2>/dev/null || true
@@ -49,9 +50,13 @@ ROOT_PART="${LOOP}p3"
 
 echo "=== Extracting rootfs ==="
 mount "$ROOT_PART" "$MNT"
+mkdir -p "$MNT/boot"
+mount "$BOOT_PART" "$MNT/boot"
 
 KERNEL_VER=$(find "$MNT/usr/lib/modules" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | head -n 1)
 echo "Kernel version: $KERNEL_VER"
+echo "Boot contents:"
+ls -la "$MNT/boot/" | head -20
 
 SIZE=$(du -sBM "$MNT" | awk '{print $1}' | tr -d 'M')
 SIZE=$((SIZE + (SIZE / 8) + 512))
@@ -150,6 +155,7 @@ ESPCFG
 done
 
 umount "$ESP_MNT"
+umount "$MNT/boot"
 umount "$MNT"
 
 echo "=== Fetching Mu-Silicium ==="
