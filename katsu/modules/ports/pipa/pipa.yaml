@@ -20,6 +20,7 @@ dnf:
     - bootmac
 
     # Audio and camera
+    - alsa-ucm-conf
     - pipa-sound-conf
     - libcamera
     - libcamera-ipa
