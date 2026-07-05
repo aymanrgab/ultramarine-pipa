@@ -8,13 +8,17 @@ out_file: ultramarine-plasma-44-pipa.raw
 
 bootloader: grub
 
-kernel_cmdline: "quiet clk_ignore_unused pd_ignore_unused"
+kernel_cmdline: "quiet splash clk_ignore_unused pd_ignore_unused"
 
 scripts:
   post:
     - id: grub
       name: Set up GRUB for pipa
       file: pipa-grub-setup.sh
+    - id: pipa-dnf-repo
+      priority: 45
+      name: Install pipa DNF repository
+      file: pipa-dnf-repo.sh
     - id: pipa-services
       priority: 50
       name: Enable pipa services

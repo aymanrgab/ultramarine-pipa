@@ -2,7 +2,7 @@
 set -x
 
 BOOT_LABEL="boot"
-CMDLINE="root=LABEL=um-pipa rw rootwait boot=LABEL=${BOOT_LABEL} console=tty0 quiet clk_ignore_unused pd_ignore_unused"
+CMDLINE="root=LABEL=um-pipa rw rootwait boot=LABEL=${BOOT_LABEL} console=tty0 quiet splash clk_ignore_unused pd_ignore_unused"
 INITRAMFS_STABLE="initramfs-linux-pipa.img"
 
 printf '%s\n' "$CMDLINE" > /etc/cmdline
