@@ -13,7 +13,7 @@ BOOT_LABEL="boot"
 ESP_LABEL="UMPIPAESP"
 
 SILICIUM_URL="https://github.com/onesaladleaf/Mu-Silicium/releases/download/v3.5-pocketblue/Mu-pipa.img"
-VBMETA_DISABLED="$REPO_ROOT/assets/vbmeta-disabled.img"
+VBMETA_IMG="$REPO_ROOT/assets/vbmeta.img"
 
 if [ "$(id -u)" -ne 0 ]; then
     echo "Must be run as root"
@@ -222,10 +222,10 @@ if [ ! -f "$OUTPUT_DIR/silicium.img" ]; then
 fi
 
 echo "=== Copying vbmeta ==="
-if [ -f "$VBMETA_DISABLED" ]; then
-    cp "$VBMETA_DISABLED" "$OUTPUT_DIR/vbmeta-disabled.img"
+if [ -f "$VBMETA_IMG" ]; then
+    cp "$VBMETA_IMG" "$OUTPUT_DIR/vbmeta.img"
 else
-    echo "WARNING: vbmeta-disabled.img not found at $VBMETA_DISABLED"
+    echo "WARNING: vbmeta.img not found at $VBMETA_IMG"
     echo "You'll need to provide this manually"
 fi
 

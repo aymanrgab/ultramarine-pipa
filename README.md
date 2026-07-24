@@ -33,7 +33,7 @@ ultramarine-pipa/
 │       ├── pipa-services.sh    # Service enablement script
 │       └── repodir/            # DNF repo pointing to pipa-pkgs
 ├── scripts/            # Build and flash helper scripts
-├── assets/             # EFI template, vbmeta-disabled.img
+├── assets/             # EFI template, vbmeta.img
 ├── Dockerfile          # Fedora 44 build container (Katsu only)
 └── output/             # Final flash images (git-ignored)
 ```
